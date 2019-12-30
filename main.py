@@ -38,15 +38,15 @@ def do_crane_dance(robot, crane_motor):
 
 
 def do_line_follow(robot, color_sensor):
-    follow_line(robot = robot,
+    move_robot.follow_line_dark(robot = robot,
         color_sensor = color_sensor,
-        max_distance = 0, 
+        max_distance = 600, 
         stop_on_color=None,
-        speed_mm_s = 100)
+        speed_mm_s = 300)
 
 #
 # Write your program here
-brick.sound.beep(1000, 600)
+brick.sound.beep(600, 200)
 brick.display.text('Driving forward')
 wait(1000)
 brick.display.text('Starting')
@@ -55,7 +55,7 @@ robot, crane_motor, left_motor, right_motor,color_sensor_left, color_sensor_righ
 
 #do_crane_dance(robot, crane_motor)
 #do_color_dance(robot, color_sensor_left)
-do_line_follow(robot, color_sensor=color_sensor_left)
+#do_line_follow(robot, color_sensor=color_sensor_left)
 
 wait(20000)
 

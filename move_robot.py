@@ -96,7 +96,7 @@ def follow_line(robot,
     integral = 0
     previous_error = 0
 
-    while true:
+    while True:
         # Calculate steering using PID algorithm
         error = target_value - color_sensor.reflection()
         integral += (error * interval)
@@ -106,13 +106,15 @@ def follow_line(robot,
         # u positive: too bright, turn right
         # u negative: too dark,   turn left
         u = (Kp * error) + (Ki * integral) + (Kd * derivative)
-        print(' previous_error ' + previous_error
-            + ' error ' + error
-            + ' integral ' + integral
-            + ' derivative ' + derivative
-            + ' u ' + u
-            + ' error_increasing_cnt ' + error_increasing_cnt
-            + ' cum_distance ' + (cum_duration * speed_mm_s)/1000
+        print(' prev_err ' + str(previous_error)
+            + ' err ' + str(error)
+            + ' integrl ' + str(integral)
+            + ' tgt ' + str(target_value)
+            + ' actual ' + str(color_sensor.reflection())
+            + ' deriv ' + str(derivative)
+            + ' u ' + str(u)
+            + ' error_cnt ' + str(error_increasing_cnt)
+            + ' cum_dist ' + str(int((cum_duration * speed_mm_s)/1000))
         )
 
         robot.drive(speed_mm_s, u)
@@ -120,12 +122,11 @@ def follow_line(robot,
         cum_duration += interval
 
         # Check any endng conditions being met
-        if (max_distance > 0 and cum_duration >= max_duration)
-            or 
-            (stop_on_color and color_sensor.color() == stop_on_color):
+        if ((max_distance > 0 and cum_duration >= max_duration) or 
+            (stop_on_color and color_sensor.color() == stop_on_color)):
             robot.stop(stop_type=Stop.BRAKE)
             print('Stopping as end met')
-            return true
+            return True
  
         # If error increasing too much quit
         if error * previous_error > 0 and abs(error) >= abs(previous_error):
@@ -133,11 +134,61 @@ def follow_line(robot,
             if error_increasing_cnt > 5:
                 robot.stop(stop_type=Stop.BRAKE)
                 print('Too much Error , quitting')
-                return false
-                
-
+                return False
+        else:
+            error_increasing_cnt = 0
+ 
 
         previous_error = error
+
+
+
+def follow_line_dark(robot,
+    color_sensor,
+    max_distance = 0, 
+    stop_on_color=None,
+    speed_mm_s = 100):
+   
+    sample_distance_mm =10
+    interval = sample_distance_mm / (speed_mm_s/1000) # millisecpnds to sample
+    max_duration = 1000 * int(max_distance / speed_mm_s)
+    cum_duration = 0
+    prev_intensity=intensity
+    prev_turn=0
+
+    while True:
+        intensity = color_sensor.reflection()
+        delta_intensity= intensity - prev_intensity
+
+        if ( delta_intensity >= 0):
+            turn=0
+        else:
+            #Do the opposite of the prev turn or turn one way
+            if prev_turn == 0:
+                turn = delta_intensity
+            else
+                turn = -1 * prev_turn
+ 
+        robot.drive(speed_mm_s, turn)
+        wait(interval)
+        cum_duration += interval
+        print(' intensity ' + str(intensity)
+                + ' prev_int ' + str(prev_intensity)
+                + ' turn ' + str(turn)
+                + ' prev_trn ' + str(prev_turn)
+                + ' cum_dist ' + str(int((cum_duration * speed_mm_s)/1000))
+            )
+
+        # Check any endng conditions being met
+        if ((max_distance > 0 and cum_duration >= max_duration) or 
+            (stop_on_color and color_sensor.color() == stop_on_color)):
+            robot.stop(stop_type=Stop.BRAKE)
+            print('Stopping as end met')
+            return True
+
+        prev_intensity = intensity
+        prev_turn = turn
+
 
 
 
