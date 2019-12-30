@@ -11,25 +11,38 @@ from pybricks.ev3devices import Motor
 from pybricks.parameters import Port
 from pybricks.parameters import Port
 
+import common_methods
 
-def turn(robot, angle, 
-    speed_mm_s = 100):
+DEFAULT_SPEED=170
+
+def turn(robot, angle, speed_mm_s = DEFAULT_SPEED):
     robot.drive_time(speed_mm_s, angle, 1000)
+    robot.stop(stop_type=Stop.BRAKE)
+
+def turn_reverse(robot, angle, speed_mm_s = DEFAULT_SPEED):
+    turn(robot, angle, speed_mm_s = -1 * speed_mm_s)
+
+def move_reverse(robot,
+    max_distance, 
+    speed_mm_s = DEFAULT_SPEED):
+    move_straight(robot, -1 * max_distance, speed_mm_s)
 
 def move_straight(robot,
     max_distance, 
-    speed_mm_s = 100,
+    speed_mm_s = DEFAULT_SPEED,
     stop_on_color = None, 
     stop_on_obstacle_at = -1):
 
+    print('Move stratight at speed '+ str(speed_mm_s) + ' dist ' + str(max_distance))
     if (max_distance < 0 ):
         # moving in reverse
         speed_mm_s = -1 * speed_mm_s
 
-    duration = 1000 * abs(int(max_distance / speed_mm_s))
+    duration = abs(int(1000 * max_distance / speed_mm_s))
 
     # Drive forward
     brick.display.text('Driving for left and right' + str(200))
+    print('Driving for left and right' + str(200))
  
     #robot.drive(speed = 200, steering = 0)
     robot.drive_time(speed_mm_s, 0, duration)
@@ -39,22 +52,50 @@ def move_straight(robot,
 def move_to_color(robot,
     color_sensor,
     stop_on_color,
-    speed_mm_s = 200):
-
-    brick.display.text('Driving to color' + str(stop_on_color))
+    speed_mm_s = DEFAULT_SPEED):
  
     robot.drive(speed_mm_s, 0)
     # Check if color reached.
     while color_sensor.color() != stop_on_color:
         wait(10)
     robot.stop(stop_type=Stop.BRAKE)
-    
-    brick.display.text('Reached color' + str(color_sensor.color()))
+
+def search_for_color(robot,
+    color_sensor,
+    stop_on_color):
+ 
+    sweep_width = 1
+    sweep_attempts = 0
+    sweep_speed = 45
+    forward_steps =0 
+    while forward_steps < 3:
+        while attempts < 5:
+            robot.drive_time(0, sweep_speed, sweep_width * 100)
+
+            if  color_sensor.color() == stop_on_color:
+                robot.stop(stop_type=Stop.BRAKE)
+                return True
+            
+            sweep_speed *= -1
+            sweep_width += 1
+            sweep_attempts += 1
+        
+        # reset to point at mid point
+        robot.drive_time(0, sweep_speed, int(sweep_width * 100 / 2))
+        # step forward by 1 cm to sweep again
+        robot.drive_time(100, 0, 100)
+
+    common_methods.sound_alarm()
+    return False
+
+
+
+
 
 def move_to_color_reverse(robot,
     color_sensor,
     stop_on_color,
-    speed_mm_s = 200):
+    speed_mm_s = DEFAULT_SPEED):
     move_to_color(robot,
         color_sensor,
         stop_on_color,
@@ -63,7 +104,7 @@ def move_to_color_reverse(robot,
 def move_to_obstacle(robot,
     obstacle_sensor,
     stop_on_obstacle_at,
-    speed_mm_s = 200):
+    speed_mm_s = DEFAULT_SPEED):
 
     brick.display.text('Driving to obstacle' + str(stop_on_obstacle_at))
  
@@ -81,7 +122,7 @@ def follow_line(robot,
     color_sensor,
     max_distance = 0, 
     stop_on_color=None,
-    speed_mm_s = 100):
+    speed_mm_s = DEFAULT_SPEED):
 
     # PID tuning
     Kp = 1  # proportional gain
@@ -147,12 +188,13 @@ def follow_line_dark(robot,
     color_sensor,
     max_distance = 0, 
     stop_on_color=None,
-    speed_mm_s = 100):
+    speed_mm_s = DEFAULT_SPEED):
    
     sample_distance_mm =10
     interval = sample_distance_mm / (speed_mm_s/1000) # millisecpnds to sample
     max_duration = 1000 * int(max_distance / speed_mm_s)
     cum_duration = 0
+    intensity = color_sensor.reflection()
     prev_intensity=intensity
     prev_turn=0
 
@@ -160,13 +202,14 @@ def follow_line_dark(robot,
         intensity = color_sensor.reflection()
         delta_intensity= intensity - prev_intensity
 
-        if ( delta_intensity >= 0):
+        if ( delta_intensity <= 0):
+            #Intensity reduced, i.e. moved to darker, so stay course
             turn=0
         else:
             #Do the opposite of the prev turn or turn one way
             if prev_turn == 0:
                 turn = delta_intensity
-            else
+            else:
                 turn = -1 * prev_turn
  
         robot.drive(speed_mm_s, turn)
@@ -174,6 +217,8 @@ def follow_line_dark(robot,
         cum_duration += interval
         print(' intensity ' + str(intensity)
                 + ' prev_int ' + str(prev_intensity)
+                + ' delta_intensity ' + str(delta_intensity)
+                + ' color ' + str(color_sensor.color())
                 + ' turn ' + str(turn)
                 + ' prev_trn ' + str(prev_turn)
                 + ' cum_dist ' + str(int((cum_duration * speed_mm_s)/1000))

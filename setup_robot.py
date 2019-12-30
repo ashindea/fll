@@ -12,8 +12,8 @@ from pybricks.parameters import Port
 
 def get_robot():
     # Initialize two motors and a drive base
-    wheel_diameter_mm=89
-    axle_track_mm=114
+    wheel_diameter_mm=54
+    axle_track_mm=110
 
     crane_motor=Motor(Port.A)
     left_motor=Motor(Port.D)
@@ -21,8 +21,8 @@ def get_robot():
     robot = DriveBase(left_motor, right_motor, wheel_diameter_mm, axle_track_mm)
     #robot.drive(2000, 0)
 
-    color_sensor_left = ColorSensor(Port.S2)
-    color_sensor_right = ColorSensor(Port.S3)
+    color_sensor_left = ColorSensor(Port.S3)
+    color_sensor_right = ColorSensor(Port.S2)
     # Initialize the Ultrasonic Sensor. 
     # obstacle_sensor = UltrasonicSensor(Port.S4)
     return robot, crane_motor, left_motor, right_motor,color_sensor_left, color_sensor_right

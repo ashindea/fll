@@ -10,6 +10,11 @@ from pybricks.ev3devices import Motor
 from pybricks.parameters import Port
 from pybricks.parameters import Port
 
+def move_crane_to_floor(robot, crane_motor):
+    crane_motor.run_until_stalled(-180, Stop.COAST, 50)
+    move_crane_up(robot, crane_motor, degrees = 10)
+
+
 def move_crane_up(robot, crane_motor, degrees):
     brick.display.text('Angle at start ' + str(crane_motor.angle()))
     wait(100)
