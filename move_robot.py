@@ -14,11 +14,12 @@ from pybricks.parameters import Port
 import common_methods
 
 DEFAULT_SPEED=170
+DEFAULT_LINEFOLLOW_SPEED=100
 
 def turn(robot, angle, speed_mm_s = DEFAULT_SPEED):
 
     if angle > 0:    # right turns are a bit under-done
-        angle = int(1.22 * angle)
+        angle = int(1.1 * angle)
     else:
         angle = int(angle / 1)
 
@@ -60,6 +61,7 @@ def move_to_color(robot,
     robot.drive(speed_mm_s, 0)
     # Check if color reached.
     while color_sensor.color() != stop_on_color:
+        common_methods.log_string('color check ' + str(color_sensor.color()) + ' intens:' + str(color_sensor.reflection()))
         wait(10)
     robot.stop(stop_type=Stop.BRAKE)
 
@@ -159,19 +161,28 @@ def follow_line(robot,
 def search_for_color(robot,
     color_sensor,
     stop_on_color):
+
+    if  color_sensor.color() == stop_on_color: # if already there
+        return True
+
  
     forward_steps =0 
     while forward_steps < 3:
         sweep_width = 1
         sweep_attempts = 0
         sweep_speed = 45
+
         while sweep_attempts < 5:
+            common_methods.log_string('Sweep sweep_width ' + str(sweep_width))
+            robot.drive_time(0, sweep_speed, sweep_width * 100) #sweep right
             if  color_sensor.color() == stop_on_color:
                 robot.stop(stop_type=Stop.BRAKE)
                 return True
-            robot.drive_time(0, sweep_speed, sweep_width * 100)
+            robot.drive_time(0, -1 * sweep_speed, sweep_width * 100) #sweep left
+            if  color_sensor.color() == stop_on_color:
+                robot.stop(stop_type=Stop.BRAKE)
+                return True
            
-            sweep_speed *= -1
             sweep_width += 1
             sweep_attempts += 1
         
@@ -198,17 +209,31 @@ def align_with_line(robot,  color_sensor, line_color = Color.BLACK):
     steering = 0
     while steering <=30:
         #jump forward 5cm and check if on line color
+        common_methods.log_string('align right '
+            + ' steer ' + str(steering))
+
         robot.drive_time(100, steering, 500)
         if  color_sensor.color() == line_color:
             robot.stop(stop_type=Stop.BRAKE)
             return True
+        else:
+            common_methods.log_string('align  right back up '
+                + ' steer ' + str(steering))
+            robot.drive_time(-100, steering, 500)
+
 
         # Check the other side
         if steering > 0 :
+            common_methods.log_string('align  left '
+                + ' steer ' + str(steering))
             robot.drive_time(100, -1 * steering, 500)
             if  color_sensor.color() == line_color:
                 robot.stop(stop_type=Stop.BRAKE)
                 return True
+            else:
+                common_methods.log_string('align  left back up '
+                    + ' steer ' + str(steering))
+                robot.drive_time(-100,  -1 * steering, 500)
 
         steering += 7 # Check 7 degrees on either side next
 
@@ -242,9 +267,66 @@ def follow_line_dark(robot,
             stop_on_color=None,
             line_color = Color.BLACK,
             border_color = Color.WHITE,
-            speed_mm_s):
+            speed_mm_s = speed_mm_s):
                 return True
     return False
+
+#must be on the left hite border to start this
+def follow_line_border(robot,
+    color_sensor,
+    max_distance = 0, 
+    stop_on_color=None,
+    line_color = Color.BLACK,
+    border_color = Color.WHITE,
+    speed_mm_s = DEFAULT_LINEFOLLOW_SPEED):
+
+    if ( True != search_for_color(robot, color_sensor, line_color)):
+        common_methods.log_string('follow_line_border :Could not find line to follow')
+        return False
+    
+    target_intensity = color_sensor.reflection()
+
+    follow_speed_mm_s = min(speed_mm_s, DEFAULT_LINEFOLLOW_SPEED) # line follow speed is slower
+    sample_distance_mm = 10  # sample every 1cm to check on track
+    interval = sample_distance_mm / (speed_mm_s/1000) # millisecpnds to sample
+    max_duration = 1000 * int(max_distance / speed_mm_s)
+    cum_duration = 0
+    intensity = color_sensor.reflection()
+
+    while True:
+        intensity = color_sensor.reflection()
+        current_color = color_sensor.color()
+        error = target_intensity - intensity
+        if current_color != line_color and current_color != border_color:
+            turn = 1 #right
+        elif current_color == border_color:
+            turn = 0
+        if current_color == line_color :
+            turn = -1 #left
+
+        robot.drive(follow_speed_mm_s, turn * abs(error))
+        wait(interval)
+        cum_duration += interval
+        print(' intensity ' + str(intensity)
+                + ' error ' + str(error)
+                + ' color ' + str(current_color)
+                + ' turned ' + str(turn)
+                + ' cum_dist ' + str(int((cum_duration * speed_mm_s)/1000))
+            )
+
+        # Check any endng conditions being met
+        if ((max_distance > 0 and cum_duration >= max_duration) or 
+            (stop_on_color and color_sensor.color() == stop_on_color)):
+            robot.stop(stop_type=Stop.BRAKE)
+            print('Stopping as end met')
+            common_methods.sound_happy()
+            return True
+
+        prev_intensity = intensity
+        prev_turn = turn
+
+
+
 
 
 def follow_line_after_alignment(robot,
@@ -255,6 +337,7 @@ def follow_line_after_alignment(robot,
     border_color = Color.WHITE,
     speed_mm_s = DEFAULT_SPEED):
 
+    speed_mm_s = 100 # line follow speed is slower
     sample_distance_mm =10
     interval = sample_distance_mm / (speed_mm_s/1000) # millisecpnds to sample
     max_duration = 1000 * int(max_distance / speed_mm_s)
@@ -262,24 +345,37 @@ def follow_line_after_alignment(robot,
     intensity = color_sensor.reflection()
     prev_intensity=intensity
     prev_turn=0
+    last_turn_toward_goal=0
 
     while True:
         intensity = color_sensor.reflection()
         delta_intensity= intensity - prev_intensity
         current_color = color_sensor.color()
 
-        if ( delta_intensity <= 0 and 
-            (current_color == line_color or current_color == border_color)):
-            #Intensity reduced, i.e. moved to darker, so stay course
-            turn=0
-        elif current_color != line_color and current_color != border_color:
+
+
+        if current_color != line_color and current_color != border_color:
             if ( True != search_for_color(robot, color_sensor, line_color)):
-                common_methods.log_string('Could not find line to follow')
+                common_methods.log_string('follow_line_after_alignment :Could not find line to follow')
                 return False
+            else:
+                continue
+        elif delta_intensity == 0:
+            turn=0
+        elif delta_intensity < 0:
+            last_turn_toward_goal = prev_turn #save the last turn which took it closer
+            turn=0        
         else:
-            #Do the opposite of the prev turn or turn one way
+            #Do the opposite of the prev turn or the opposite of the last turn with gain
             if prev_turn == 0:
-                turn = delta_intensity
+                if last_turn_toward_goal == 0:
+                    if ( True != search_for_color(robot, color_sensor, line_color)):
+                        common_methods.log_string('follow_line_after_alignment :no prev turn, search')
+                        return False
+                    else:
+                        continue
+                else:
+                    turn = -1 * last_turn_toward_goal
             else:
                 turn = -1 * prev_turn
  
@@ -290,7 +386,7 @@ def follow_line_after_alignment(robot,
                 + ' prev_int ' + str(prev_intensity)
                 + ' delta_intensity ' + str(delta_intensity)
                 + ' color ' + str(color_sensor.color())
-                + ' turn ' + str(turn)
+                + ' turned ' + str(turn)
                 + ' prev_trn ' + str(prev_turn)
                 + ' cum_dist ' + str(int((cum_duration * speed_mm_s)/1000))
             )

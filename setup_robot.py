@@ -16,13 +16,13 @@ def get_robot():
     axle_track_mm=121
 
     crane_motor=Motor(Port.A)
-    left_motor=Motor(Port.D)
+    left_motor=Motor(Port.C)
     right_motor=Motor(Port.B)
     robot = DriveBase(left_motor, right_motor, wheel_diameter_mm, axle_track_mm)
     #robot.drive(2000, 0)
 
     color_sensor_left = ColorSensor(Port.S3)
-    color_sensor_right = ColorSensor(Port.S2)
+    color_sensor_right = None #ColorSensor(Port.S2)
     # Initialize the Ultrasonic Sensor. 
     # obstacle_sensor = UltrasonicSensor(Port.S4)
     return robot, crane_motor, left_motor, right_motor,color_sensor_left, color_sensor_right
