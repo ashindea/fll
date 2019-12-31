@@ -16,11 +16,14 @@ import common_methods
 DEFAULT_SPEED=170
 
 def turn(robot, angle, speed_mm_s = DEFAULT_SPEED):
-    robot.drive_time(speed_mm_s, angle, 1000)
-    robot.stop(stop_type=Stop.BRAKE)
 
-def turn_reverse(robot, angle, speed_mm_s = DEFAULT_SPEED):
-    turn(robot, angle, speed_mm_s = -1 * speed_mm_s)
+    if angle > 0:    # right turns are a bit under-done
+        angle = int(1.22 * angle)
+    else:
+        angle = int(angle / 1)
+
+    robot.drive_time(0, angle, 1000)
+    robot.stop(stop_type=Stop.BRAKE)
 
 def move_reverse(robot,
     max_distance, 
@@ -59,36 +62,6 @@ def move_to_color(robot,
     while color_sensor.color() != stop_on_color:
         wait(10)
     robot.stop(stop_type=Stop.BRAKE)
-
-def search_for_color(robot,
-    color_sensor,
-    stop_on_color):
- 
-    sweep_width = 1
-    sweep_attempts = 0
-    sweep_speed = 45
-    forward_steps =0 
-    while forward_steps < 3:
-        while attempts < 5:
-            robot.drive_time(0, sweep_speed, sweep_width * 100)
-
-            if  color_sensor.color() == stop_on_color:
-                robot.stop(stop_type=Stop.BRAKE)
-                return True
-            
-            sweep_speed *= -1
-            sweep_width += 1
-            sweep_attempts += 1
-        
-        # reset to point at mid point
-        robot.drive_time(0, sweep_speed, int(sweep_width * 100 / 2))
-        # step forward by 1 cm to sweep again
-        robot.drive_time(100, 0, 100)
-
-    common_methods.sound_alarm()
-    return False
-
-
 
 
 
@@ -182,14 +155,106 @@ def follow_line(robot,
 
         previous_error = error
 
+# sweep and steop forward till color is found
+def search_for_color(robot,
+    color_sensor,
+    stop_on_color):
+ 
+    forward_steps =0 
+    while forward_steps < 3:
+        sweep_width = 1
+        sweep_attempts = 0
+        sweep_speed = 45
+        while sweep_attempts < 5:
+            if  color_sensor.color() == stop_on_color:
+                robot.stop(stop_type=Stop.BRAKE)
+                return True
+            robot.drive_time(0, sweep_speed, sweep_width * 100)
+           
+            sweep_speed *= -1
+            sweep_width += 1
+            sweep_attempts += 1
+        
+        # reset to point at mid point
+        robot.drive_time(0, sweep_speed, int(sweep_width * 100 / 2))
+        # step forward by 1 cm to sweep again
+        robot.drive_time(100, 0, 100)
+        forward_steps += 1
+
+    common_methods.sound_alarm()
+    return False
 
 
+
+# Used by line follower to align with the general direction of the line
+def align_with_line(robot,  color_sensor, line_color = Color.BLACK):
+
+    # If not already on the line then search for it - need to start on line
+    if  color_sensor.color() != line_color:
+        if ( True != search_for_color(robot, color_sensor, line_color)):
+            common_methods.log_string('Could not find line to follow')
+            return False
+
+    steering = 0
+    while steering <=30:
+        #jump forward 5cm and check if on line color
+        robot.drive_time(100, steering, 500)
+        if  color_sensor.color() == line_color:
+            robot.stop(stop_type=Stop.BRAKE)
+            return True
+
+        # Check the other side
+        if steering > 0 :
+            robot.drive_time(100, -1 * steering, 500)
+            if  color_sensor.color() == line_color:
+                robot.stop(stop_type=Stop.BRAKE)
+                return True
+
+        steering += 7 # Check 7 degrees on either side next
+
+    return False
+
+
+ 
 def follow_line_dark(robot,
     color_sensor,
     max_distance = 0, 
     stop_on_color=None,
+    line_color = Color.BLACK,
+    border_color = Color.WHITE,
     speed_mm_s = DEFAULT_SPEED):
    
+    follow_attempts = 0 
+
+    while follow_attempts < 2:
+        follow_attempts += 1
+        if ( True != search_for_color(robot, color_sensor, line_color)):
+            common_methods.log_string('Could not find line to follow')
+            return False
+    
+        if ( True != align_with_line(robot, color_sensor, line_color)):
+            common_methods.log_string('Could not align with line')
+            return False
+        
+        if follow_line_after_alignment(robot,
+            color_sensor,
+            max_distance = 0, 
+            stop_on_color=None,
+            line_color = Color.BLACK,
+            border_color = Color.WHITE,
+            speed_mm_s):
+                return True
+    return False
+
+
+def follow_line_after_alignment(robot,
+    color_sensor,
+    max_distance = 0, 
+    stop_on_color=None,
+    line_color = Color.BLACK,
+    border_color = Color.WHITE,
+    speed_mm_s = DEFAULT_SPEED):
+
     sample_distance_mm =10
     interval = sample_distance_mm / (speed_mm_s/1000) # millisecpnds to sample
     max_duration = 1000 * int(max_distance / speed_mm_s)
@@ -201,10 +266,16 @@ def follow_line_dark(robot,
     while True:
         intensity = color_sensor.reflection()
         delta_intensity= intensity - prev_intensity
+        current_color = color_sensor.color()
 
-        if ( delta_intensity <= 0):
+        if ( delta_intensity <= 0 and 
+            (current_color == line_color or current_color == border_color)):
             #Intensity reduced, i.e. moved to darker, so stay course
             turn=0
+        elif current_color != line_color and current_color != border_color:
+            if ( True != search_for_color(robot, color_sensor, line_color)):
+                common_methods.log_string('Could not find line to follow')
+                return False
         else:
             #Do the opposite of the prev turn or turn one way
             if prev_turn == 0:

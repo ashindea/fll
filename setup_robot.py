@@ -13,7 +13,7 @@ from pybricks.parameters import Port
 def get_robot():
     # Initialize two motors and a drive base
     wheel_diameter_mm=54
-    axle_track_mm=110
+    axle_track_mm=121
 
     crane_motor=Motor(Port.A)
     left_motor=Motor(Port.D)
