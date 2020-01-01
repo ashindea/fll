@@ -15,6 +15,8 @@ import common_methods
 
 DEFAULT_SPEED=170
 DEFAULT_LINEFOLLOW_SPEED=100
+DEFAULT_ANGULAR_SPEED=90
+TANK_CHASSIS_LEN_MM=200
 
 def turn(robot, angle, speed_mm_s = DEFAULT_SPEED):
 
@@ -53,6 +55,35 @@ def move_straight(robot,
     robot.stop(stop_type=Stop.BRAKE)
  
 
+def turn_to_color(robot,
+    color_sensor,
+    stop_on_color,
+    rotate_dir = 1,
+    angular_speed_deg_s = DEFAULT_ANGULAR_SPEED):
+ 
+    robot.drive(0, rotate_dir * angular_speed_deg_s)
+    # Check if color reached.
+    common_methods.log_string('preturncolor: ' + str(color_sensor.color()) + ' intens: ' + str(color_sensor.reflection()))
+    while color_sensor.color() != stop_on_color:
+        common_methods.log_string('turncolor: ' + str(color_sensor.color()) + ' intens: ' + str(color_sensor.reflection()))
+        wait(10)
+    robot.stop(stop_type=Stop.BRAKE)
+
+def turn_to_color_right(robot,
+    color_sensor,
+    stop_on_color,
+    angular_speed_deg_s = DEFAULT_ANGULAR_SPEED):
+ 
+    turn_to_color(robot, color_sensor, stop_on_color, 1, angular_speed_deg_s)
+
+def turn_to_color_left(robot,
+    color_sensor,
+    stop_on_color,
+    angular_speed_deg_s = DEFAULT_ANGULAR_SPEED):
+ 
+    turn_to_color(robot, color_sensor, stop_on_color, -1, angular_speed_deg_s )
+
+
 def move_to_color(robot,
     color_sensor,
     stop_on_color,
@@ -61,7 +92,7 @@ def move_to_color(robot,
     robot.drive(speed_mm_s, 0)
     # Check if color reached.
     while color_sensor.color() != stop_on_color:
-        common_methods.log_string('color check ' + str(color_sensor.color()) + ' intens:' + str(color_sensor.reflection()))
+        common_methods.log_string('color: ' + str(color_sensor.color()) + ' intens: ' + str(color_sensor.reflection()))
         wait(10)
     robot.stop(stop_type=Stop.BRAKE)
 
@@ -198,6 +229,40 @@ def search_for_color(robot,
 
 
 # Used by line follower to align with the general direction of the line
+def align_with_line_to_left(robot,
+    color_sensor,
+    line_color = Color.BLACK,
+    border_color = Color.WHITE):
+
+    #Find left white border of line
+    move_to_color(robot=robot,color_sensor=color_sensor,
+        stop_on_color=border_color)
+    move_to_color(robot=robot,color_sensor=color_sensor,
+        stop_on_color=line_color)
+    move_to_color(robot=robot,color_sensor=color_sensor,
+        stop_on_color=border_color)
+
+    #move forward half the length of tank and rotate
+    move_straight(robot, int(TANK_CHASSIS_LEN_MM/2))    
+    turn_to_color_right(robot, color_sensor, border_color) 
+
+def align_with_line_to_right(robot,
+    color_sensor,
+    line_color = Color.BLACK,
+    border_color = Color.WHITE):
+
+    #Find left white border of line
+    move_to_color(robot=robot,color_sensor=color_sensor,
+        stop_on_color=border_color)
+
+    #move forward half the length of tank and rotate
+    move_straight(robot, int(TANK_CHASSIS_LEN_MM/2))    
+    turn_to_color_left(robot, color_sensor, line_color) 
+    turn_to_color_left(robot, color_sensor, border_color) 
+
+
+
+# Used by line follower to align with the general direction of the line
 def align_with_line(robot,  color_sensor, line_color = Color.BLACK):
 
     # If not already on the line then search for it - need to start on line
@@ -280,7 +345,7 @@ def follow_line_border(robot,
     border_color = Color.WHITE,
     speed_mm_s = DEFAULT_LINEFOLLOW_SPEED):
 
-    if ( True != search_for_color(robot, color_sensor, line_color)):
+    if ( True != search_for_color(robot, color_sensor, border_color)):
         common_methods.log_string('follow_line_border :Could not find line to follow')
         return False
     
@@ -292,6 +357,7 @@ def follow_line_border(robot,
     max_duration = 1000 * int(max_distance / speed_mm_s)
     cum_duration = 0
     intensity = color_sensor.reflection()
+    off_track_cnt=0
 
     while True:
         intensity = color_sensor.reflection()
@@ -301,7 +367,7 @@ def follow_line_border(robot,
             turn = 1 #right
         elif current_color == border_color:
             turn = 0
-        if current_color == line_color :
+        elif current_color == line_color :
             turn = -1 #left
 
         robot.drive(follow_speed_mm_s, turn * abs(error))
