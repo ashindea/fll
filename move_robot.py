@@ -14,8 +14,9 @@ from pybricks.parameters import Port
 import common_methods
 
 DEFAULT_SPEED=170
+DEFAULT_COLOR_FIND_SPEED=100
 DEFAULT_LINEFOLLOW_SPEED=100
-DEFAULT_ANGULAR_SPEED=90
+DEFAULT_ANGULAR_SPEED=45
 TANK_CHASSIS_LEN_MM=200
 
 def turn(robot, angle, speed_mm_s = DEFAULT_SPEED):
@@ -87,7 +88,7 @@ def turn_to_color_left(robot,
 def move_to_color(robot,
     color_sensor,
     stop_on_color,
-    speed_mm_s = DEFAULT_SPEED):
+    speed_mm_s = DEFAULT_COLOR_FIND_SPEED):
  
     robot.drive(speed_mm_s, 0)
     # Check if color reached.
@@ -101,7 +102,7 @@ def move_to_color(robot,
 def move_to_color_reverse(robot,
     color_sensor,
     stop_on_color,
-    speed_mm_s = DEFAULT_SPEED):
+    speed_mm_s = DEFAULT_COLOR_FIND_SPEED):
     move_to_color(robot,
         color_sensor,
         stop_on_color,
@@ -235,13 +236,10 @@ def align_with_line_to_left(robot,
     border_color = Color.WHITE):
 
     #Find left white border of line
-    move_to_color(robot=robot,color_sensor=color_sensor,
-        stop_on_color=border_color)
-    move_to_color(robot=robot,color_sensor=color_sensor,
-        stop_on_color=line_color)
-    move_to_color(robot=robot,color_sensor=color_sensor,
-        stop_on_color=border_color)
-
+    move_to_color(robot, color_sensor, border_color)
+    move_to_color(robot, color_sensor, line_color)
+    move_to_color(robot, color_sensor, border_color)
+ 
     #move forward half the length of tank and rotate
     move_straight(robot, int(TANK_CHASSIS_LEN_MM/2))    
     turn_to_color_right(robot, color_sensor, border_color) 

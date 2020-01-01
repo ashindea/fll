@@ -56,6 +56,7 @@ def do_align_to_left_then_right():
     move_robot.align_with_line_to_right(robot, color_sensor=color_sensor_left)
 
 def color_test(robot, color_sensor):
+    common_methods.log_string('color ' + str(color_sensor.color()) + ' intens:' + str(color_sensor.reflection()))
     robot.drive(50, 0)
     for x in range(20):
         common_methods.log_string('color ' + str(color_sensor.color()) + ' intens:' + str(color_sensor.reflection()))
@@ -95,27 +96,12 @@ def do_crane_dance(robot, crane_motor):
     worker.move_crane_up(robot, crane_motor, degrees=60)
 
 
-def do_line_follow(robot, color_sensor):
-    move_robot.follow_line_dark(robot = robot,
-        color_sensor = color_sensor,
-        max_distance = 300, 
-        stop_on_color=None,
-        speed_mm_s = 100)
+
 
 def do_find_line_then_follow(robot, color_sensor):
-    move_robot.move_to_color(robot=robot,color_sensor=color_sensor,
-        stop_on_color=Color.BLACK)
-    wait(800)
-    move_robot.move_to_color(robot=robot,color_sensor=color_sensor,
-        stop_on_color=Color.WHITE)
-    
-    move_robot.follow_line_border(robot = robot,
-            color_sensor = color_sensor,
-            max_distance = 300, 
-            stop_on_color=None,
-            line_color = Color.BLACK,
-            border_color = Color.WHITE,
-            speed_mm_s = 80)
+    move_robot.align_with_line_to_right(robot, color_sensor_left)
+    move_robot.follow_line_border(robot,color_sensor_left,max_distance = 200)
+
 
 #
 # Write your program here
@@ -125,19 +111,30 @@ robot, crane_motor, left_motor, right_motor,color_sensor_left, color_sensor_righ
 
 #do_crane_dance(robot, crane_motor)
 #do_color_dance(robot, color_sensor_left)
-#do_line_follow(robot, color_sensor=color_sensor_left)
-#do_find_line_then_follow(robot, color_sensor=color_sensor_left)
+do_find_line_then_follow(robot, color_sensor=color_sensor_left)
 #do_move_return(robot)
 #zigzag()
 #do_align_to_left_then_right()
-color_test(robot, color_sensor_left)
-#move_robot.turn_to_color_right(robot, color_sensor_left, Color.WHITE) 
+#color_test(robot, color_sensor_left)
+"""
+#move_robot.move_to_color(robot, color_sensor_left, Color.WHITE)
+
+#move_robot.move_to_color(robot, color_sensor_left, Color.BLACK)
+#move_robot.move_to_color(robot, color_sensor_left, Color.WHITE)
+
+move_robot.move_straight(robot, int(200/2))    
+
+move_robot.turn_to_color_right(robot, color_sensor_left, Color.WHITE) 
+"""
+#move_robot.align_with_line_to_right(robot, color_sensor=color_sensor_left)
+#move_robot.follow_line_border(robot,color_sensor_left,max_distance = 200)
+
+#move_robot.turn_to_color_left(robot, color_sensor_left, Color.WHITE) 
 
 #move_robot.search_for_color(robot, color_sensor_left, Color.BLACK)
 """
 move_robot.move_to_color(robot, color_sensor_left, Color.BLACK)
 move_robot.move_to_color(robot, color_sensor_left, Color.WHITE)
-move_robot.follow_line_border
 """
 #move_robot.move_to_color(robot=robot,color_sensor=color_sensor_left,stop_on_color=Color.WHITE)
 
