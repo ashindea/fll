@@ -109,9 +109,9 @@ common_methods.sound_attention()
 
 robot, crane_motor, left_motor, right_motor,color_sensor_left, color_sensor_right=setup_robot.get_robot()
 
-#do_crane_dance(robot, crane_motor)
+do_crane_dance(robot, crane_motor)
 #do_color_dance(robot, color_sensor_left)
-do_find_line_then_follow(robot, color_sensor=color_sensor_left)
+#do_find_line_then_follow(robot, color_sensor=color_sensor_left)
 #do_move_return(robot)
 #zigzag()
 #do_align_to_left_then_right()
