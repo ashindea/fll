@@ -102,20 +102,38 @@ def do_find_line_then_follow(robot, color_sensor):
     move_robot.align_with_line_to_right(robot, color_sensor_left)
     move_robot.follow_line_border(robot,color_sensor_left,max_distance = 200)
 
+def gyro_test(robot, gyro):
+    common_methods.log_string('Pre-run      gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+
+    move_robot.move_straight(robot=robot, max_distance=300)
+    common_methods.log_string('post Run speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+ 
+    move_robot.turn(robot=robot, angle=90)
+    common_methods.log_string('post +90 turn gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+
+    move_robot.turn(robot=robot, angle=180)
+    common_methods.log_string('post U turn   gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+
+    move_robot.move_straight(robot=robot, max_distance=300)
+    common_methods.log_string('post st. run  gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+
+    move_robot.turn(robot=robot, angle=-90)
+    common_methods.log_string('post -90 turn gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
 
 #
 # Write your program here
 common_methods.sound_attention()
 
-robot, crane_motor, left_motor, right_motor,color_sensor_left, color_sensor_right=setup_robot.get_robot()
+robot, crane_motor, left_motor, right_motor,color_sensor_left, color_sensor_right, gyro =setup_robot.get_robot()
 
-do_crane_dance(robot, crane_motor)
+#do_crane_dance(robot, crane_motor)
 #do_color_dance(robot, color_sensor_left)
 #do_find_line_then_follow(robot, color_sensor=color_sensor_left)
 #do_move_return(robot)
 #zigzag()
 #do_align_to_left_then_right()
 #color_test(robot, color_sensor_left)
+gyro_test(robot, gyro)
 """
 #move_robot.move_to_color(robot, color_sensor_left, Color.WHITE)
 
