@@ -19,6 +19,28 @@ DEFAULT_LINEFOLLOW_SPEED=100
 DEFAULT_ANGULAR_SPEED=45
 TANK_CHASSIS_LEN_MM=200
 
+def turn_to_direction(robot, gyro, target_angle, speed_mm_s = DEFAULT_SPEED):
+    angle_change = target_angle - gyro.angle()
+
+    robot.drive_time(0, 0.9 * angle_change, 1000)
+    robot.stop(stop_type=Stop.BRAKE)
+
+    max_attempts=10 # limit oscialltions to 10, not forever
+    while ( abs(target_angle - gyro.angle()) > 3 and max_attempts >0):
+        error=target_angle - gyro.angle()
+        adj_angular_speed = error * 1.5
+        robot.drive(0, adj_angular_speed)
+        wait(100)
+        max_attempts -= 1
+
+    robot.stop(stop_type=Stop.BRAKE)
+
+    adjusted_angle = gyro.angle()
+    common_methods.log_string('turn_to_direction -- Adjusted target: ' + str(target_angle) + ' now: ' + str(adjusted_angle))
+
+
+
+
 def turn(robot, angle, speed_mm_s = DEFAULT_SPEED):
 
     if angle > 0:    # right turns are a bit under-done

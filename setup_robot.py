@@ -15,7 +15,7 @@ def calibrate_gyro(gyro, new_angle=0):
     message = 'calibrating gyro speed ' + str(current_speed) + ' angle:' + str(current_angle)
     print(message)
     brick.display.text(message)
-    wait(200)
+    wait(100)
     message = 'Resetting gyro to ' + str(new_angle) 
     print(message)
     brick.display.text(message)

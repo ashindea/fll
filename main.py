@@ -108,18 +108,18 @@ def gyro_test(robot, gyro):
     move_robot.move_straight(robot=robot, max_distance=300)
     common_methods.log_string('post Run speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
  
-    move_robot.turn(robot=robot, angle=90)
+    move_robot.turn_to_direction(robot, gyro, target_angle=90)
     common_methods.log_string('post +90 turn gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
 
-    move_robot.turn(robot=robot, angle=180)
+    move_robot.turn_to_direction(robot=robot, gyro=gyro, target_angle=180)
     common_methods.log_string('post U turn   gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
-
+"""
     move_robot.move_straight(robot=robot, max_distance=300)
     common_methods.log_string('post st. run  gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
 
     move_robot.turn(robot=robot, angle=-90)
     common_methods.log_string('post -90 turn gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
-
+"""
 #
 # Write your program here
 common_methods.sound_attention()
