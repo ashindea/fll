@@ -20,13 +20,21 @@ DEFAULT_ANGULAR_SPEED=45
 TANK_CHASSIS_LEN_MM=200
 
 def turn_to_direction(robot, gyro, target_angle, speed_mm_s = DEFAULT_SPEED):
-    angle_change = target_angle - gyro.angle()
+    start_angle = gyro.angle()
+    angle_change = target_angle - start_angle
+
+    if (angle_change >180 ):
+        angle_change = angle_change - 360
+    if (angle_change < -180 ):
+        angle_change = angle_change + 360
+    target_angle = angle_change + start_angle
+
 
     robot.drive_time(0, 0.9 * angle_change, 1000)
     robot.stop(stop_type=Stop.BRAKE)
 
     max_attempts=10 # limit oscialltions to 10, not forever
-    while ( abs(target_angle - gyro.angle()) > 3 and max_attempts >0):
+    while ( abs(target_angle - gyro.angle()) > 1 and max_attempts >0):
         error=target_angle - gyro.angle()
         adj_angular_speed = error * 1.5
         robot.drive(0, adj_angular_speed)
@@ -36,14 +44,17 @@ def turn_to_direction(robot, gyro, target_angle, speed_mm_s = DEFAULT_SPEED):
     robot.stop(stop_type=Stop.BRAKE)
 
     adjusted_angle = gyro.angle()
-    common_methods.log_string('turn_to_direction -- Adjusted target: ' + str(target_angle) + ' now: ' + str(adjusted_angle))
+    common_methods.log_string('turn_to_direction -- Adjusted target: ' + str(target_angle) 
+        + ' now: ' + str(adjusted_angle)
+        + ' remain attempts : ' + str(max_attempts)
+        )
 
 
 
 
 def turn(robot, angle, speed_mm_s = DEFAULT_SPEED):
 
-    if angle > 0:    # right turns are a bit under-done
+    if angle > 0:    # right turns are a bit under-steered
         angle = int(1.1 * angle)
     else:
         angle = int(angle / 1)
@@ -58,9 +69,7 @@ def move_reverse(robot,
 
 def move_straight(robot,
     max_distance, 
-    speed_mm_s = DEFAULT_SPEED,
-    stop_on_color = None, 
-    stop_on_obstacle_at = -1):
+    speed_mm_s = DEFAULT_SPEED):
 
     print('Move stratight at speed '+ str(speed_mm_s) + ' dist ' + str(max_distance))
     if (max_distance < 0 ):
@@ -68,12 +77,6 @@ def move_straight(robot,
         speed_mm_s = -1 * speed_mm_s
 
     duration = abs(int(1000 * max_distance / speed_mm_s))
-
-    # Drive forward
-    brick.display.text('Driving for left and right' + str(200))
-    print('Driving for left and right' + str(200))
- 
-    #robot.drive(speed = 200, steering = 0)
     robot.drive_time(speed_mm_s, 0, duration)
     robot.stop(stop_type=Stop.BRAKE)
  
@@ -86,9 +89,7 @@ def turn_to_color(robot,
  
     robot.drive(0, rotate_dir * angular_speed_deg_s)
     # Check if color reached.
-    common_methods.log_string('preturncolor: ' + str(color_sensor.color()) + ' intens: ' + str(color_sensor.reflection()))
     while color_sensor.color() != stop_on_color:
-        common_methods.log_string('turncolor: ' + str(color_sensor.color()) + ' intens: ' + str(color_sensor.reflection()))
         wait(10)
     robot.stop(stop_type=Stop.BRAKE)
 
@@ -356,7 +357,7 @@ def follow_line_dark(robot,
                 return True
     return False
 
-#must be on the left hite border to start this
+#must be on the left border to start
 def follow_line_border(robot,
     color_sensor,
     max_distance = 0, 

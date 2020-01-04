@@ -18,7 +18,7 @@ def move_crane_to_floor(robot, crane_motor):
 def move_crane_up(robot, crane_motor, degrees):
     brick.display.text('Angle at start ' + str(crane_motor.angle()))
     wait(100)
-    crane_motor.run_angle(90,  degrees)
+    crane_motor.run_angle(45,  degrees, Stop.BRAKE)
     brick.display.text('Angle at end ' + str(crane_motor.angle()))
 
 def move_crane_down(robot, crane_motor, degrees):

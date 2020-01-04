@@ -113,13 +113,74 @@ def gyro_test(robot, gyro):
 
     move_robot.turn_to_direction(robot=robot, gyro=gyro, target_angle=180)
     common_methods.log_string('post U turn   gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
-"""
+
     move_robot.move_straight(robot=robot, max_distance=300)
     common_methods.log_string('post st. run  gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
 
-    move_robot.turn(robot=robot, angle=-90)
+    move_robot.turn_to_direction(robot=robot, gyro=gyro, target_angle=-90)
     common_methods.log_string('post -90 turn gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
 """
+"""
+
+def gyro_color_test_angled(robot, gyro, color_sensor, crane_motor):
+    common_methods.log_string('Pre-run      gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+    worker.move_crane_to_floor(robot, crane_motor)
+    worker.move_crane_up(robot, crane_motor, degrees=135)
+
+    move_robot.move_straight(robot=robot, max_distance=800)
+    common_methods.log_string('post Run speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+
+    move_robot.turn_to_direction(robot, gyro, target_angle=45)
+    common_methods.log_string('post +45 turn gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+
+    move_robot.move_to_color(robot=robot,color_sensor=color_sensor,
+        stop_on_color=Color.BLACK, speed_mm_s = 70)
+
+
+    move_robot.turn_to_direction(robot, gyro, target_angle=90)
+    common_methods.log_string('post +90 turn gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+
+    move_robot.move_straight(robot=robot, max_distance=100)
+    worker.move_crane_to_floor(robot, crane_motor)
+    worker.move_crane_up(robot, crane_motor, degrees=45)
+    worker.move_crane_to_floor(robot, crane_motor)
+    move_robot.move_reverse(robot=robot, max_distance=100)
+    worker.move_crane_up(robot, crane_motor, degrees=135)
+
+
+    move_robot.turn_to_direction(robot, gyro, target_angle=210)
+    common_methods.log_string('post +210 turn gyro speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+
+    move_robot.move_straight(robot=robot, max_distance=700)
+    common_methods.log_string('post Run speed ' + str(gyro.speed()) + ' angle:' + str(gyro.angle()))
+"""
+"""
+
+def do_crane_push(robot, gyro, color_sensor, crane_motor):
+    worker.move_crane_to_floor(robot, crane_motor)
+    worker.move_crane_up(robot, crane_motor, degrees=10)
+
+    move_robot.move_straight(robot=robot, max_distance=50)
+    move_robot.turn(robot=robot, angle=30)
+    move_robot.move_straight(robot=robot, max_distance=100)
+    move_robot.turn(robot=robot, angle=-40)
+
+    crane_motor.run(40)
+    move_robot.move_straight(robot=robot, max_distance=130, speed_mm_s = 50)
+    crane_motor.stop(Stop.BRAKE)
+    worker.move_crane_down(robot, crane_motor, degrees=30)
+    move_robot.move_straight(robot=robot, max_distance=60)
+    """for x in range(5):
+        worker.move_crane_up(robot, crane_motor, degrees=20)
+        move_robot.move_straight(robot=robot, max_distance=40)"""
+
+    move_robot.move_reverse(robot=robot, max_distance=350)
+
+    """worker.move_crane_up(robot, crane_motor, degrees=20)
+    move_robot.move_straight(robot=robot, max_distance=50)"""
+
+    #move_robot.turn(robot=robot, angle=30)
+
 #
 # Write your program here
 common_methods.sound_attention()
@@ -133,7 +194,9 @@ robot, crane_motor, left_motor, right_motor,color_sensor_left, color_sensor_righ
 #zigzag()
 #do_align_to_left_then_right()
 #color_test(robot, color_sensor_left)
-gyro_test(robot, gyro)
+#gyro_test(robot, gyro)
+#gyro_color_test_angled(robot, gyro, color_sensor_left, crane_motor)
+do_crane_push(robot, gyro, color_sensor_left, crane_motor)
 """
 #move_robot.move_to_color(robot, color_sensor_left, Color.WHITE)
 
