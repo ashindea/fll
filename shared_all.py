@@ -17,15 +17,17 @@ DEFAULT_COLOR_FIND_SPEED=100
 DEFAULT_LINEFOLLOW_SPEED=100
 DEFAULT_ANGULAR_SPEED=45
 TANK_CHASSIS_LEN_MM=200
+SENSOR_TO_AXLE=60
 WHEEL_DIAMETER_MM=54
 AXLE_TRACK_MM=121
 
 SOUND_VOLUME=7
 
 #output
-crane_motor=Motor(Port.A)
-left_motor=Motor(Port.C)
-right_motor=Motor(Port.B)
+crane_motor=Motor(Port.D)
+side_crane=Motor(Port.C)
+left_motor=Motor(Port.B)
+right_motor=Motor(Port.A)
 robot = DriveBase(left_motor, right_motor, WHEEL_DIAMETER_MM, AXLE_TRACK_MM)
 #Sensors
 gyro=GyroSensor(Port.S1)
@@ -185,7 +187,7 @@ def move_to_obstacle(
     stop_on_obstacle_at,
     speed_mm_s = DEFAULT_SPEED):
 
-    brick.display.text('Driving to obstacle' + str(stop_on_obstacle_at))
+    log_string('Driving to obstacle' + str(stop_on_obstacle_at))
  
     robot.drive(speed_mm_s, 0)
     # Check if color reached.
@@ -193,7 +195,7 @@ def move_to_obstacle(
         wait(10)
     robot.stop(stop_type=Stop.BRAKE)
     
-    brick.display.text('Reached obstacle' + str(obstacle_sensor.distance()))
+    log_string('Reached obstacle' + str(obstacle_sensor.distance()))
 
 
 
@@ -249,7 +251,7 @@ def align_with_line_to_left(
     move_to_color( color_sensor, border_color)
  
     #move forward half the length of tank and rotate
-    move_straight( int(TANK_CHASSIS_LEN_MM/2))    
+    move_straight( SENSOR_TO_AXLE)    
     turn_to_color_right( color_sensor, border_color) 
 
 def align_with_line_to_right(
@@ -258,11 +260,11 @@ def align_with_line_to_right(
     border_color = Color.WHITE):
 
     #Find left white border of line
-    move_to_color(robot=color_sensor=color_sensor,
+    move_to_color(color_sensor=color_sensor,
         stop_on_color=border_color)
 
     #move forward half the length of tank and rotate
-    move_straight( int(TANK_CHASSIS_LEN_MM/2))    
+    move_straight( SENSOR_TO_AXLE)    
     turn_to_color_left( color_sensor, line_color) 
     turn_to_color_left( color_sensor, border_color) 
 
@@ -290,7 +292,6 @@ def follow_line_border(
     max_duration = 1000 * int(max_distance / speed_mm_s)
     cum_duration = 0
     intensity = color_sensor.reflection()
-    off_track_cnt=0
 
     while True:
         intensity = color_sensor.reflection()
@@ -306,7 +307,7 @@ def follow_line_border(
         robot.drive(follow_speed_mm_s, turn * abs(error))
         wait(interval)
         cum_duration += interval
-        print(' intensity ' + str(intensity)
+        log_string('follow_line_border intensity ' + str(intensity)
                 + ' error ' + str(error)
                 + ' color ' + str(current_color)
                 + ' turned ' + str(turn)
@@ -317,7 +318,7 @@ def follow_line_border(
         if ((max_distance > 0 and cum_duration >= max_duration) or 
             (stop_on_color and color_sensor.color() == stop_on_color)):
             robot.stop(stop_type=Stop.BRAKE)
-            print('Stopping as end met')
+            log_string('follow_line_border Stopping as end met')
             sound_happy()
             return True
 
@@ -337,16 +338,16 @@ def move_crane_to_floor( crane_motor):
 
 
 def move_crane_up( crane_motor, degrees):
-    brick.display.text('Angle at start ' + str(crane_motor.angle()))
+    log_string('Angle at start ' + str(crane_motor.angle()))
     wait(100)
-    crane_motor.run_angle(45,  degrees, Stop.BRAKE)
-    brick.display.text('Angle at end ' + str(crane_motor.angle()))
+    crane_motor.run_angle(90,  degrees, Stop.BRAKE)
+    log_string('Angle at end ' + str(crane_motor.angle()))
 
 def move_crane_down( crane_motor, degrees):
-    brick.display.text('Down Angle at start ' + str(crane_motor.angle()))
+    log_string('Down Angle at start ' + str(crane_motor.angle()))
     wait(100)
     crane_motor.run_angle(90,  -1 * degrees)
-    brick.display.text('down Angle at end ' + str(crane_motor.angle()))
+    log_string('down Angle at end ' + str(crane_motor.angle()))
 
 ### Run this at start up
-calibrate_gyro(gyro)
+calibrate_gyro()

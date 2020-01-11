@@ -35,7 +35,7 @@ def calibrate_gyro(gyro, new_angle=0):
 def get_robot():
     # Initialize two motors and a drive base
     wheel_diameter_mm=54
-    axle_track_mm=121
+    axle_track_mm=152
 
     crane_motor=Motor(Port.A)
     left_motor=Motor(Port.C)

@@ -195,8 +195,9 @@ robot, crane_motor, left_motor, right_motor,color_sensor_left, color_sensor_righ
 #do_align_to_left_then_right()
 #color_test(robot, color_sensor_left)
 #gyro_test(robot, gyro)
-#gyro_color_test_angled(robot, gyro, color_sensor_left, crane_motor)
-do_crane_push(robot, gyro, color_sensor_left, crane_motor)
+gyro_color_test_angled(robot, gyro, color_sensor_left, crane_motor)
+#do_crane_push(robot, gyro, color_sensor_left, crane_motor)
+
 """
 #move_robot.move_to_color(robot, color_sensor_left, Color.WHITE)
 
