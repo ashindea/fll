@@ -18,21 +18,27 @@ DEFAULT_LINEFOLLOW_SPEED=100
 DEFAULT_ANGULAR_SPEED=45
 TANK_CHASSIS_LEN_MM=200
 SENSOR_TO_AXLE=60
-WHEEL_DIAMETER_MM=54
-AXLE_TRACK_MM=121
+# WHEEL_DIAMETER_MM=54
+# AXLE_TRACK_MM=121
+WHEEL_DIAMETER_MM=89
+AXLE_TRACK_MM=160
 
 SOUND_VOLUME=7
 
 #output
 crane_motor=Motor(Port.D)
-side_crane=Motor(Port.C)
-left_motor=Motor(Port.B)
-right_motor=Motor(Port.A)
+# side_crane=Motor(Port.C)
+
+#drive motors
+left_motor=Motor(Port.C, Direction.COUNTERCLOCKWISE)
+# left_motor.duty(75)
+right_motor=Motor(Port.B, Direction.COUNTERCLOCKWISE)
 robot = DriveBase(left_motor, right_motor, WHEEL_DIAMETER_MM, AXLE_TRACK_MM)
+
 #Sensors
 gyro=GyroSensor(Port.S1)
-color_sensor_left = ColorSensor(Port.S3)
-color_sensor_right = None #ColorSensor(Port.S2)
+color_sensor_left = ColorSensor(Port.S2)
+color_sensor_right = ColorSensor(Port.S3)
 # Initialize the Ultrasonic Sensor. 
 # obstacle_sensor = UltrasonicSensor(Port.S4)
 
@@ -122,6 +128,8 @@ def move_straight(
     max_distance, 
     speed_mm_s = DEFAULT_SPEED):
 
+    left_motor.reset_angle(0)
+    right_motor.reset_angle(0)
     log_string('Move stratight at speed '+ str(speed_mm_s) + ' dist ' + str(max_distance))
     if (max_distance < 0 ):
         # moving in reverse
@@ -130,6 +138,7 @@ def move_straight(
     duration = abs(int(1000 * max_distance / speed_mm_s))
     robot.drive_time(speed_mm_s, 0, duration)
     robot.stop(stop_type=Stop.BRAKE)
+    log_string('Move stratight Done left motangle '+ str(left_motor.angle()) + ' right motangle ' + str(right_motor.angle()))
  
 
 def turn_to_color(
