@@ -12,7 +12,7 @@ from pybricks.parameters import Port
 from pybricks.parameters import Port
 
 
-DEFAULT_SPEED=170
+DEFAULT_SPEED=300
 DEFAULT_COLOR_FIND_SPEED=100
 DEFAULT_LINEFOLLOW_SPEED=100
 DEFAULT_ANGULAR_SPEED=45
@@ -21,7 +21,7 @@ SENSOR_TO_AXLE=60
 # WHEEL_DIAMETER_MM=54
 # AXLE_TRACK_MM=121
 WHEEL_DIAMETER_MM=89
-AXLE_TRACK_MM=160
+AXLE_TRACK_MM=157
 
 SOUND_VOLUME=7
 
@@ -30,15 +30,15 @@ crane_motor=Motor(Port.D)
 # side_crane=Motor(Port.C)
 
 #drive motors
-left_motor=Motor(Port.C, Direction.COUNTERCLOCKWISE)
+left_motor=Motor(Port.B, Direction.COUNTERCLOCKWISE)
 # left_motor.duty(75)
-right_motor=Motor(Port.B, Direction.COUNTERCLOCKWISE)
+right_motor=Motor(Port.C, Direction.COUNTERCLOCKWISE)
 robot = DriveBase(left_motor, right_motor, WHEEL_DIAMETER_MM, AXLE_TRACK_MM)
 
 #Sensors
 gyro=GyroSensor(Port.S1)
 color_sensor_left = ColorSensor(Port.S2)
-color_sensor_right = ColorSensor(Port.S3)
+# color_sensor_right = ColorSensor(Port.S3)
 # Initialize the Ultrasonic Sensor. 
 # obstacle_sensor = UltrasonicSensor(Port.S4)
 
@@ -343,7 +343,7 @@ def follow_line_border(
 
 def move_crane_to_floor( crane_motor):
     crane_motor.run_until_stalled(-180, Stop.COAST, 50)
-    move_crane_up( crane_motor, degrees = 10)
+    move_crane_up( crane_motor, degrees = 5)
 
 
 def move_crane_up( crane_motor, degrees):
@@ -357,6 +357,15 @@ def move_crane_down( crane_motor, degrees):
     wait(100)
     crane_motor.run_angle(90,  -1 * degrees)
     log_string('down Angle at end ' + str(crane_motor.angle()))
+
+def run_to_home():
+    turn_to_direction(gyro, target_angle=190)
+    robot.drive(400, 0)
+    while left_motor.stalled() != True:
+        wait(100)
+    robot.stop()
+
+
 
 ### Run this at start up
 calibrate_gyro()
